@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Content - AI Media Platform</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>🤖 AI Radio</h1>
+                <p>Explore Content</p>
+            </div>
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/stream">Live Stream</a>
+                <a href="/explore" class="active">Explore</a>
+                <a href="/upload">Upload</a>
+                <a href="/dashboard">Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main explore-page">
+        <div class="container">
+            <!-- Search and Filters -->
+            <section class="search-filters">
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search AI-generated content..." maxlength="100">
+                    <button type="button" id="searchBtn">🔍</button>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="mediaTypeFilter">Type:</label>
+                        <select id="mediaTypeFilter">
+                            <option value="">All Types</option>
+                            <option value="audio">Audio</option>
+                            <option value="video">Video</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="categoryFilter">Category:</label>
+                        <select id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="music">Music</option>
+                            <option value="podcasts">Podcasts</option>
+                            <option value="stories">Stories</option>
+                            <option value="educational">Educational</option>
+                            <option value="experimental">Experimental</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="sortBy">Sort by:</label>
+                        <select id="sortBy">
+                            <option value="newest">Newest First</option>
+                            <option value="oldest">Oldest First</option>
+                            <option value="popular">Most Popular</option>
+                            <option value="duration_short">Shortest First</option>
+                            <option value="duration_long">Longest First</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="clearFilters" class="clear-filters">Clear Filters</button>
+                </div>
+            </section>
+
+            <!-- Results Summary -->
+            <section class="results-summary">
+                <div class="summary-text">
+                    <span id="resultCount">Loading...</span>
+                    <span class="filter-summary" id="filterSummary"></span>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid">⊞ Grid</button>
+                    <button class="view-btn" data-view="list">☰ List</button>
+                </div>
+            </section>
+
+            <!-- Content Grid/List -->
+            <section class="content-display">
+                <div class="content-grid" id="contentGrid">
+                    <!-- Content items will be loaded here -->
+                </div>
+
+                <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+                    <div class="spinner">⏳</div>
+                    <p>Loading AI content...</p>
+                </div>
+
+                <div class="no-results" id="noResults" style="display: none;">
+                    <div class="no-results-icon">🔍</div>
+                    <h3>No content found</h3>
+                    <p>Try adjusting your search or filters</p>
+                </div>
+            </section>
+
+            <!-- Pagination -->
+            <section class="pagination-section">
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be generated here -->
+                </div>
+            </section>
+
+            <!-- Featured Tags -->
+            <section class="featured-tags">
+                <h3>Popular Tags</h3>
+                <div class="tag-cloud" id="tagCloud">
+                    <!-- Popular tags will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="recent-activity">
+                <h3>Recent Activity</h3>
+                <div class="activity-feed" id="activityFeed">
+                    <!-- Recent activity will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Content Item Template -->
+    <template id="contentItemTemplate">
+        <div class="content-item" data-id="">
+            <div class="content-thumbnail">
+                <div class="thumbnail-image"></div>
+                <div class="play-overlay">
+                    <button class="play-btn">▶️</button>
+                </div>
+                <div class="content-type-badge"></div>
+                <div class="duration-badge"></div>
+            </div>
+            
+            <div class="content-info">
+                <h3 class="content-title"></h3>
+                <p class="content-creator"></p>
+                <p class="content-description"></p>
+                
+                <div class="content-meta">
+                    <span class="upload-date"></span>
+                    <span class="play-count">👁️ 0 plays</span>
+                    <span class="ai-model">🤖 AI Model</span>
+                </div>
+                
+                <div class="content-tags"></div>
+                
+                <div class="content-actions">
+                    <button class="action-btn play-btn">▶️ Play</button>
+                    <button class="action-btn like-btn">❤️ Like</button>
+                    <button class="action-btn share-btn">🔗 Share</button>
+                    <button class="action-btn download-btn">⬇️ Download</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Mini Player -->
+    <div class="mini-player" id="miniPlayer" style="display: none;">
+        <div class="mini-player-content">
+            <div class="mini-track-info">
+                <span class="mini-title"></span>
+                <span class="mini-artist"></span>
+            </div>
+            <div class="mini-controls">
+                <button class="mini-btn" id="miniPlayPause">⏸️</button>
+                <button class="mini-btn" id="miniClose">❌</button>
+            </div>
+        </div>
+        <audio id="contentPlayer"></audio>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 AI Media Platform. Discover amazing AI-generated content.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/explore.js"></script>
+</body>
+</html>

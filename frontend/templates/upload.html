@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Content - AI Media Platform</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>🤖 AI Radio</h1>
+                <p>Upload Content</p>
+            </div>
+            <nav class="nav">
+                <a href="/">Home</a>
+                <a href="/stream">Live Stream</a>
+                <a href="/explore">Explore</a>
+                <a href="/upload" class="active">Upload</a>
+                <a href="/dashboard">Dashboard</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main upload-page">
+        <div class="container">
+            <section class="upload-header">
+                <h1>Share Your AI Creation</h1>
+                <p>Upload your AI-generated music, podcasts, stories, or videos to share with the community.</p>
+            </section>
+
+            <div class="upload-container">
+                <form class="upload-form" id="uploadForm" enctype="multipart/form-data">
+                    <!-- File Upload Section -->
+                    <div class="form-section">
+                        <h2>📁 File Upload</h2>
+                        
+                        <div class="file-drop-zone" id="fileDropZone">
+                            <div class="drop-zone-content">
+                                <span class="upload-icon">📤</span>
+                                <p>Drag and drop your file here, or <button type="button" class="browse-btn">browse</button></p>
+                                <p class="file-info">Maximum file size: 500MB</p>
+                                <p class="supported-formats">
+                                    Audio: MP3, WAV, OGG, M4A<br>
+                                    Video: MP4, WebM, AVI, MOV
+                                </p>
+                            </div>
+                            <input type="file" id="fileInput" name="file" accept="audio/*,video/*" required hidden>
+                        </div>
+                        
+                        <div class="file-preview" id="filePreview" style="display: none;">
+                            <div class="file-details">
+                                <span class="file-name" id="fileName"></span>
+                                <span class="file-size" id="fileSize"></span>
+                                <button type="button" class="remove-file" id="removeFile">❌</button>
+                            </div>
+                            <div class="upload-progress" id="uploadProgress" style="display: none;">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill"></div>
+                                </div>
+                                <span class="progress-text" id="progressText">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Content Information -->
+                    <div class="form-section">
+                        <h2>📝 Content Information</h2>
+                        
+                        <div class="form-group">
+                            <label for="title">Title *</label>
+                            <input type="text" id="title" name="title" required maxlength="200" 
+                                   placeholder="Enter a descriptive title for your AI creation">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="description">Description</label>
+                            <textarea id="description" name="description" rows="4" maxlength="1000"
+                                      placeholder="Describe your AI-generated content, the process used, or any interesting details..."></textarea>
+                            <div class="char-counter">
+                                <span id="descCharCount">0</span>/1000
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="mediaType">Media Type *</label>
+                                <select id="mediaType" name="media_type" required>
+                                    <option value="">Select type</option>
+                                    <option value="audio">Audio</option>
+                                    <option value="video">Video</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="category">Category</label>
+                                <select id="category" name="category">
+                                    <option value="">Select category</option>
+                                    <option value="music">Music</option>
+                                    <option value="podcasts">Podcast</option>
+                                    <option value="stories">Story/Audiobook</option>
+                                    <option value="educational">Educational</option>
+                                    <option value="experimental">Experimental</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Information -->
+                    <div class="form-section">
+                        <h2>🤖 AI Information</h2>
+                        
+                        <div class="form-group">
+                            <label for="aiModel">AI Model Used</label>
+                            <input type="text" id="aiModel" name="ai_model" placeholder="e.g., GPT-4, Suno, Stable Audio, etc.">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="prompt">Generation Prompt</label>
+                            <textarea id="prompt" name="prompt" rows="3" maxlength="500"
+                                      placeholder="Share the prompt or parameters you used to generate this content..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="tags">Tags</label>
+                            <input type="text" id="tags" name="tags" 
+                                   placeholder="Add comma-separated tags (e.g., electronic, ambient, experimental)">
+                            <div class="tag-suggestions" id="tagSuggestions">
+                                <span class="tag-suggestion" data-tag="electronic">electronic</span>
+                                <span class="tag-suggestion" data-tag="ambient">ambient</span>
+                                <span class="tag-suggestion" data-tag="experimental">experimental</span>
+                                <span class="tag-suggestion" data-tag="classical">classical</span>
+                                <span class="tag-suggestion" data-tag="podcast">podcast</span>
+                                <span class="tag-suggestion" data-tag="narration">narration</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Publishing Options -->
+                    <div class="form-section">
+                        <h2>🌐 Publishing Options</h2>
+                        
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="allow_streaming" checked>
+                                <span class="checkmark"></span>
+                                Allow this content to be played on the live stream
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="allow_download">
+                                <span class="checkmark"></span>
+                                Allow users to download this content
+                            </label>
+                            
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="featured_content">
+                                <span class="checkmark"></span>
+                                Consider for featured content (subject to review)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Terms and Submit -->
+                    <div class="form-section">
+                        <div class="terms-section">
+                            <label class="checkbox-label required">
+                                <input type="checkbox" id="agreeTerms" name="agree_terms" required>
+                                <span class="checkmark"></span>
+                                I confirm this content is AI-generated and I have the rights to share it
+                            </label>
+                            <p class="terms-text">
+                                By uploading, you agree to our <a href="/terms">Terms of Service</a> and confirm that this content 
+                                is generated by artificial intelligence and does not violate any copyrights.
+                            </p>
+                        </div>
+
+                        <div class="submit-section">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="btn-text">Upload Content</span>
+                                <span class="btn-loader" style="display: none;">⏳</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="resetForm">Reset Form</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Upload Guidelines -->
+                <aside class="upload-guidelines">
+                    <h3>📋 Upload Guidelines</h3>
+                    <ul>
+                        <li>✅ Content must be 100% AI-generated</li>
+                        <li>✅ Maximum file size: 500MB</li>
+                        <li>✅ Supported formats: MP3, WAV, OGG, M4A, MP4, WebM</li>
+                        <li>❌ No copyrighted material</li>
+                        <li>❌ No explicit or harmful content</li>
+                        <li>❌ No spam or low-quality uploads</li>
+                    </ul>
+                    
+                    <div class="processing-info">
+                        <h4>🔄 Processing</h4>
+                        <p>After upload, your content will be:</p>
+                        <ol>
+                            <li>Automatically processed and optimized</li>
+                            <li>Reviewed by our AI moderation system</li>
+                            <li>Added to the platform if approved</li>
+                            <li>Given an AI-generated DJ introduction</li>
+                        </ol>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 AI Media Platform. Share your AI creations with the world.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+    <script src="/static/js/upload.js"></script>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<icecast>
+    <location>${ICECAST_LOCATION:-AI Radio Platform}</location>
+    <admin>${ICECAST_ADMIN_EMAIL:-admin@localhost}</admin>
+    
+    <limits>
+        <clients>100</clients>
+        <sources>2</sources>
+        <threadpool>5</threadpool>
+        <queue-size>524288</queue-size>
+        <client-timeout>30</client-timeout>
+        <header-timeout>15</header-timeout>
+        <source-timeout>10</source-timeout>
+        <burst-on-connect>1</burst-on-connect>
+        <burst-size>65535</burst-size>
+    </limits>
+    
+    <authentication>
+        <source-password>${ICECAST_SOURCE_PASSWORD:-ai_radio_source_2024}</source-password>
+        <relay-password>${ICECAST_RELAY_PASSWORD:-ai_radio_relay_2024}</relay-password>
+        <admin-user>${ICECAST_ADMIN_USER:-admin}</admin-user>
+        <admin-password>${ICECAST_ADMIN_PASSWORD:-ai_radio_admin_2024}</admin-password>
+    </authentication>
+    
+    <hostname>localhost</hostname>
+    
+    <listen-socket>
+        <port>${ICECAST_PORT:-8000}</port>
+        <bind-address>${ICECAST_BIND_ADDRESS:-0.0.0.0}</bind-address>
+    </listen-socket>
+    
+    <!-- Main audio stream -->
+    <mount type="normal">
+        <mount-name>${ICECAST_MOUNT:-/stream}</mount-name>
+        <username>${ICECAST_SOURCE_USER:-source}</username>
+        <password>${ICECAST_SOURCE_PASSWORD:-ai_radio_source_2024}</password>
+        <stream-name>${ICECAST_STREAM_NAME:-AI Radio - All AI Generated Content}</stream-name>
+        <stream-description>${ICECAST_STREAM_DESCRIPTION:-24/7 stream of AI-generated music, podcasts, and video content}</stream-description>
+        <stream-url>${ICECAST_STREAM_URL:-http://localhost:5000}</stream-url>
+        <genre>${ICECAST_GENRE:-AI Generated Content}</genre>
+        <type>application/ogg</type>
+        <subtype>vorbis</subtype>
+        <public>1</public>
+        <intro>/silence.mp3</intro>
+        <fallback-mount>/silence.mp3</fallback-mount>
+        <fallback-override>1</fallback-override>
+        <no-yp>0</no-yp>
+        
+        <!-- Cross-origin headers for web players -->
+        <!-- For production, ensure all secrets are set via environment variables or a secure config management system. -->
+        <http-headers>
+            <header name="Access-Control-Allow-Origin" value="*" />
+            <header name="Access-Control-Allow-Headers" value="Origin, Accept, X-Requested-With, Content-Type" />
+            <header name="Access-Control-Allow-Methods" value="GET, OPTIONS, HEAD" />
+        </http-headers>
+        
+        <!-- Authentication for source clients uses the source-password above -->
+    </mount>
+    
+    <!-- Lower quality stream for mobile/slow connections -->
+    <mount type="normal">
+        <mount-name>${ICECAST_MOUNT_LOW:-/stream_low}</mount-name>
+        <username>${ICECAST_SOURCE_USER:-source}</username>
+        <password>${ICECAST_SOURCE_PASSWORD:-ai_radio_source_2024}</password>
+        <stream-name>${ICECAST_STREAM_NAME_LOW:-AI Radio - Low Quality Stream}</stream-name>
+        <stream-description>${ICECAST_STREAM_DESCRIPTION_LOW:-Low bandwidth AI-generated content stream}</stream-description>
+        <stream-url>${ICECAST_STREAM_URL:-http://localhost:5000}</stream-url>
+        <genre>${ICECAST_GENRE:-AI Generated Content}</genre>
+        <type>audio/mpeg</type>
+        <subtype>mpeg</subtype>
+        <public>1</public>
+        <intro>${ICECAST_SILENCE_FILE:-/silence.mp3}</intro>
+        <fallback-mount>${ICECAST_SILENCE_FILE:-/silence.mp3}</fallback-mount>
+        <no-yp>0</no-yp>
+        
+        <http-headers>
+            <header name="Access-Control-Allow-Origin" value="*" />
+            <header name="Access-Control-Allow-Headers" value="Origin, Accept, X-Requested-With, Content-Type" />
+            <header name="Access-Control-Allow-Methods" value="GET, OPTIONS, HEAD" />
+        </http-headers>
+    </mount>
+    
+    <!-- Admin interface -->
+    <fileserve>1</fileserve>
+    
+    <paths>
+        <basedir>${ICECAST_BASE_DIR:-/usr/local/share/icecast}</basedir>
+        <logdir>${ICECAST_LOG_DIR:-/Users/basil_jackson/Documents/ai_radio/log/icecast}</logdir>
+        <webroot>${ICECAST_WEB_ROOT:-/usr/local/share/icecast/web}</webroot>
+        <adminroot>${ICECAST_ADMIN_ROOT:-/usr/local/share/icecast/admin}</adminroot>
+        <alias source="/" destination="/status.xsl"/>
+    </paths>
+    
+    <logging>
+        <accesslog>access.log</accesslog>
+        <errorlog>error.log</errorlog>
+        <loglevel>3</loglevel>
+        <logsize>10000</logsize>
+        <logarchive>1</logarchive>
+    </logging>
+    
+    <security>
+        <chroot>0</chroot>
+        <changeowner>
+            <user>${ICECAST_USER:-basil_jackson}</user>
+            <group>${ICECAST_GROUP:-staff}</group>
+        </changeowner>
+    </security>
+</icecast>
