@@ -1,8 +1,8 @@
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from flask import Flask, request, jsonify
-from flask_login import LoginManager, login_required, current_user
+"""Flask application factory for the AI Radio backend."""
+
+from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_login import LoginManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import os
@@ -12,10 +12,10 @@ from upload_handler import upload_bp
 from api import api_bp
 
 def create_app():
-    # Initialize Flask app
+    """Create and configure the Flask application."""
     app = Flask(__name__)
-    
-    # Configuration
+
+    # Core configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///ai_radio.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
