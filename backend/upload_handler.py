@@ -13,19 +13,24 @@ upload_bp = Blueprint('upload', __name__)
 class MediaProcessor:
     ALLOWED_AUDIO = {'mp3', 'wav', 'ogg', 'm4a', 'flac', 'aac'}
     ALLOWED_VIDEO = {'mp4', 'webm', 'avi', 'mov', 'mkv'}
+    ALLOWED_MIME = {'audio/mpeg', 'audio/wav', 'video/mp4'}
     MAX_DURATION = 3600  # 1 hour max
-    
+
     def __init__(self, upload_dir=None):
         self.upload_dir = upload_dir or current_app.config.get('UPLOAD_FOLDER')
+
+    def validate_file(self, file):
+        """Validate basic file type and perform malware scan stub."""
         import magic
-        # Scan file type
+
+        # Check MIME type
         mime = magic.from_buffer(file.read(2048), mime=True)
         file.seek(0)
-        allowed_types = ['audio/mpeg', 'audio/wav', 'video/mp4']
-        if mime not in allowed_types:
+        if mime not in self.ALLOWED_MIME:
             raise ValueError(f'Invalid file type: {mime}')
-        # Stub for malware scan
-        # TODO: Integrate with ClamAV or other scanner
+
+        # TODO: Integrate with a malware scanner such as ClamAV
+        # Currently this is a stub and does not perform any scanning.
         
     def get_file_extension(self, filename):
         return filename.rsplit('.', 1)[1].lower() if '.' in filename else ''
@@ -141,7 +146,10 @@ class MediaProcessor:
             # Validate file format
             if not self.is_allowed_file(file.filename, metadata['media_type']):
                 raise ValueError("Invalid file format")
-            
+
+            # Basic validation and malware scan stub
+            self.validate_file(file)
+
             # Generate file hash for duplicate detection
             file_hash = self.get_file_hash(file)
             
