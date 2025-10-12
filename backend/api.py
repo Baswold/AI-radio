@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, current_app, send_file
+from flask import Blueprint, request, jsonify, send_file
 from flask_login import login_required, current_user
 from models import db, Upload, Playlist, StreamStatus, User
 from scheduler import get_playlist_manager
@@ -6,6 +6,37 @@ from streaming_manager import get_streaming_manager
 import os
 
 api_bp = Blueprint('api', __name__)
+
+
+def serialize_upload(upload, fields):
+    """Convert an ``Upload`` model instance to a dictionary.
+
+    Args:
+        upload: ``Upload`` model instance to serialize.
+        fields: Iterable of field names to include in the output.
+
+    Returns:
+        Dictionary containing the requested fields.
+    """
+
+    field_map = {
+        'id': lambda u: u.id,
+        'title': lambda u: u.title,
+        'username': lambda u: u.user.username,
+        'description': lambda u: u.description,
+        'media_type': lambda u: u.media_type,
+        'category': lambda u: u.category,
+        'duration': lambda u: u.duration,
+        'played_count': lambda u: u.played_count,
+        'tags': lambda u: u.tags,
+        'thumbnail_url': lambda u: f'/api/media/thumbnail/{u.id}' if u.thumbnail_path else None,
+        'uploaded_at': lambda u: u.uploaded_at.isoformat(),
+        'status': lambda u: u.status,
+        'last_played': lambda u: u.last_played.isoformat() if u.last_played else None,
+    }
+
+    return {field: field_map[field](upload) for field in fields}
+
 
 # Public endpoints (no auth required)
 
@@ -57,17 +88,13 @@ def get_featured_content():
                          .limit(limit).all()
         
         return jsonify({
-            'featured': [{
-                'id': upload.id,
-                'title': upload.title,
-                'username': upload.user.username,
-                'media_type': upload.media_type,
-                'category': upload.category,
-                'duration': upload.duration,
-                'played_count': upload.played_count,
-                'thumbnail_url': f'/api/media/thumbnail/{upload.id}' if upload.thumbnail_path else None,
-                'uploaded_at': upload.uploaded_at.isoformat()
-            } for upload in featured]
+            'featured': [
+                serialize_upload(upload, [
+                    'id', 'title', 'username', 'media_type', 'category',
+                    'duration', 'played_count', 'thumbnail_url', 'uploaded_at'
+                ])
+                for upload in featured
+            ]
         }), 200
         
     except Exception as e:
@@ -104,19 +131,14 @@ def explore_content():
         uploads = query.paginate(page=page, per_page=per_page, error_out=False)
         
         return jsonify({
-            'uploads': [{
-                'id': upload.id,
-                'title': upload.title,
-                'username': upload.user.username,
-                'description': upload.description,
-                'media_type': upload.media_type,
-                'category': upload.category,
-                'duration': upload.duration,
-                'played_count': upload.played_count,
-                'tags': upload.tags,
-                'thumbnail_url': f'/api/media/thumbnail/{upload.id}' if upload.thumbnail_path else None,
-                'uploaded_at': upload.uploaded_at.isoformat()
-            } for upload in uploads.items],
+            'uploads': [
+                serialize_upload(upload, [
+                    'id', 'title', 'username', 'description', 'media_type',
+                    'category', 'duration', 'played_count', 'tags',
+                    'thumbnail_url', 'uploaded_at'
+                ])
+                for upload in uploads.items
+            ],
             'pagination': {
                 'page': uploads.page,
                 'pages': uploads.pages,
@@ -154,18 +176,13 @@ def search_content():
         
         return jsonify({
             'query': query_text,
-            'results': [{
-                'id': upload.id,
-                'title': upload.title,
-                'username': upload.user.username,
-                'description': upload.description,
-                'media_type': upload.media_type,
-                'category': upload.category,
-                'duration': upload.duration,
-                'tags': upload.tags,
-                'thumbnail_url': f'/api/media/thumbnail/{upload.id}' if upload.thumbnail_path else None,
-                'uploaded_at': upload.uploaded_at.isoformat()
-            } for upload in uploads.items],
+            'results': [
+                serialize_upload(upload, [
+                    'id', 'title', 'username', 'description', 'media_type',
+                    'category', 'duration', 'tags', 'thumbnail_url', 'uploaded_at'
+                ])
+                for upload in uploads.items
+            ],
             'pagination': {
                 'page': uploads.page,
                 'pages': uploads.pages,
@@ -298,17 +315,11 @@ def get_current_playlist():
         # Get playlist entries with upload details
         entries = []
         for entry in sorted(current_playlist.entries, key=lambda x: x.position):
-            upload = entry.upload
             entries.append({
                 'position': entry.position,
-                'upload': {
-                    'id': upload.id,
-                    'title': upload.title,
-                    'username': upload.user.username,
-                    'media_type': upload.media_type,
-                    'duration': upload.duration,
-                    'category': upload.category
-                }
+                'upload': serialize_upload(entry.upload, [
+                    'id', 'title', 'username', 'media_type', 'duration', 'category'
+                ])
             })
         
         return jsonify({
@@ -335,17 +346,13 @@ def get_recommendations():
         recommendations = playlist_manager.generate_content_recommendations(current_user.id)
         
         return jsonify({
-            'recommendations': [{
-                'id': upload.id,
-                'title': upload.title,
-                'username': upload.user.username,
-                'media_type': upload.media_type,
-                'category': upload.category,
-                'duration': upload.duration,
-                'played_count': upload.played_count,
-                'thumbnail_url': f'/api/media/thumbnail/{upload.id}' if upload.thumbnail_path else None,
-                'uploaded_at': upload.uploaded_at.isoformat()
-            } for upload in recommendations[:limit]]
+            'recommendations': [
+                serialize_upload(upload, [
+                    'id', 'title', 'username', 'media_type', 'category',
+                    'duration', 'played_count', 'thumbnail_url', 'uploaded_at'
+                ])
+                for upload in recommendations[:limit]
+            ]
         }), 200
         
     except Exception as e:
@@ -362,24 +369,14 @@ def get_upload_details(upload_id):
         if upload.user_id != current_user.id and upload.status != 'approved':
             return jsonify({'error': 'Content not found'}), 404
         
-        return jsonify({
-            'upload': {
-                'id': upload.id,
-                'title': upload.title,
-                'description': upload.description,
-                'username': upload.user.username,
-                'media_type': upload.media_type,
-                'category': upload.category,
-                'duration': upload.duration,
-                'status': upload.status,
-                'played_count': upload.played_count,
-                'last_played': upload.last_played.isoformat() if upload.last_played else None,
-                'tags': upload.tags,
-                'thumbnail_url': f'/api/media/thumbnail/{upload.id}' if upload.thumbnail_path else None,
-                'uploaded_at': upload.uploaded_at.isoformat(),
-                'can_edit': upload.user_id == current_user.id
-            }
-        }), 200
+        data = serialize_upload(upload, [
+            'id', 'title', 'description', 'username', 'media_type', 'category',
+            'duration', 'status', 'played_count', 'last_played', 'tags',
+            'thumbnail_url', 'uploaded_at'
+        ])
+        data['can_edit'] = upload.user_id == current_user.id
+
+        return jsonify({'upload': data}), 200
         
     except Exception as e:
         return jsonify({'error': 'Failed to get upload details'}), 500
@@ -431,14 +428,12 @@ def get_pending_uploads():
                         .paginate(page=page, per_page=per_page, error_out=False)
         
         return jsonify({
-            'pending': [{
-                'id': upload.id,
-                'title': upload.title,
-                'username': upload.user.username,
-                'media_type': upload.media_type,
-                'duration': upload.duration,
-                'uploaded_at': upload.uploaded_at.isoformat()
-            } for upload in pending.items],
+            'pending': [
+                serialize_upload(upload, [
+                    'id', 'title', 'username', 'media_type', 'duration', 'uploaded_at'
+                ])
+                for upload in pending.items
+            ],
             'pagination': {
                 'page': pending.page,
                 'pages': pending.pages,
