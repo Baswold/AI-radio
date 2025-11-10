@@ -6,9 +6,13 @@ This module interfaces with the AI Brain (desktop with GPU) for heavy processing
 import requests
 import json
 import os
+from pathlib import Path
 from typing import Dict, Optional
 import random
 from datetime import datetime
+
+# Get project root directory
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 class AIHost:
     def __init__(self, ai_brain_url=None):
@@ -208,7 +212,8 @@ class TTSHandler:
     def __init__(self, ai_brain_url=None):
         """Initialize TTS handler for voice synthesis"""
         self.ai_brain_url = ai_brain_url or os.environ.get('AI_BRAIN_URL', 'http://localhost:8080')
-        self.output_dir = os.path.join(os.environ.get('MEDIA_FOLDER', '/Users/basil_jackson/Documents/ai_radio/media'), 'dj_intros')
+        media_folder = os.environ.get('MEDIA_FOLDER', str(BASE_DIR / 'media'))
+        self.output_dir = os.path.join(media_folder, 'dj_intros')
         os.makedirs(self.output_dir, exist_ok=True)
     
     def generate_audio(self, text: str, output_filename: str) -> Optional[str]:

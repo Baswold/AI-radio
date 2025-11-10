@@ -8,14 +8,21 @@ from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import os
 import subprocess
+from pathlib import Path
 from models import db, Upload, Playlist, PlaylistEntry, Segment, StreamStatus
 from ai_generator import create_ai_host, create_tts_handler
 
+# Get project root directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 class PlaylistManager:
-    def __init__(self):
+    def __init__(self, playlist_dir=None):
         self.ai_host = create_ai_host()
         self.tts_handler = create_tts_handler()
-        self.playlist_dir = "/Users/basil_jackson/Documents/ai_radio/media/playlists"
+        self.playlist_dir = playlist_dir or os.environ.get(
+            'PLAYLIST_DIR',
+            str(BASE_DIR / 'media' / 'playlists')
+        )
         os.makedirs(self.playlist_dir, exist_ok=True)
     
     def create_daily_playlist(self, date: datetime = None) -> Playlist:

@@ -83,58 +83,61 @@ class MediaProcessor:
             return None
     
     def process_audio(self, input_path, output_path):
-        """Convert and normalize audio"""
+        """Convert and normalize audio with low CPU usage"""
         try:
+            # Use lower bitrate and simpler normalization for low-end hardware
             cmd = [
                 'ffmpeg', '-i', input_path,
                 '-codec:a', 'libmp3lame',
-                '-b:a', '192k',
+                '-b:a', '128k',  # Reduced from 192k for smaller size
                 '-ar', '44100',
                 '-ac', '2',
                 '-af', 'loudnorm=I=-16:TP=-1.5:LRA=11',
+                '-threads', '2',  # Limit CPU threads
                 '-y', output_path
             ]
-            
+
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 raise Exception(f"FFmpeg failed: {result.stderr}")
-                
+
             return True
         except Exception as e:
             print(f"Error processing audio: {e}")
             return False
     
     def process_video(self, input_path, output_path, thumbnail_path):
-        """Convert video and generate thumbnail"""
+        """Convert video and generate thumbnail with low CPU usage"""
         try:
-            # Convert video
+            # Convert video with optimizations for low-end hardware
             video_cmd = [
                 'ffmpeg', '-i', input_path,
                 '-c:v', 'libx264',
                 '-c:a', 'aac',
-                '-preset', 'fast',
-                '-crf', '23',
-                '-maxrate', '2M',
-                '-bufsize', '4M',
-                '-vf', 'scale=-2:720',  # Scale to 720p height, maintain aspect ratio
+                '-preset', 'ultrafast',  # Fastest encoding, less CPU
+                '-crf', '28',  # Higher CRF for smaller files (23->28)
+                '-maxrate', '1M',  # Reduced bitrate (2M->1M)
+                '-bufsize', '2M',  # Reduced buffer (4M->2M)
+                '-vf', 'scale=-2:480',  # Scale to 480p instead of 720p
+                '-threads', '2',  # Limit CPU threads
                 '-y', output_path
             ]
-            
+
             result = subprocess.run(video_cmd, capture_output=True, text=True)
             if result.returncode != 0:
                 raise Exception(f"Video conversion failed: {result.stderr}")
-            
-            # Generate thumbnail
+
+            # Generate thumbnail (extract from source for speed)
             thumb_cmd = [
-                'ffmpeg', '-i', output_path,
+                'ffmpeg', '-i', input_path,
                 '-ss', '5',  # 5 seconds in
                 '-vframes', '1',
-                '-vf', 'scale=320:240',
+                '-vf', 'scale=320:180',  # 16:9 aspect ratio
                 '-y', thumbnail_path
             ]
-            
+
             subprocess.run(thumb_cmd, capture_output=True, text=True)
-            
+
             return True
         except Exception as e:
             print(f"Error processing video: {e}")

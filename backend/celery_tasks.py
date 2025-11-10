@@ -5,10 +5,14 @@ Handles AI intro generation, media processing, and scheduled tasks.
 
 from celery import Celery
 from celery.schedules import crontab
+from pathlib import Path
 from models import db, Upload, Segment
 from ai_generator import create_ai_host, create_tts_handler
 from scheduler import get_scheduler_service
 import os
+
+# Get project root directory
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Initialize Celery
 celery = Celery('ai_radio_tasks')
@@ -254,7 +258,7 @@ def health_check():
             ai_brain_status = 'healthy' if ai_host.test_ai_brain_connection() else 'error'
             
             # Check disk space
-            media_folder = os.environ.get('MEDIA_FOLDER', '/Users/basil_jackson/Documents/ai_radio/media')
+            media_folder = os.environ.get('MEDIA_FOLDER', str(BASE_DIR / 'media'))
             disk_usage = get_disk_usage(media_folder)
             disk_status = 'healthy' if disk_usage < 0.9 else 'warning'  # 90% threshold
             

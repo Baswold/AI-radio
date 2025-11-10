@@ -9,15 +9,31 @@ import json
 import requests
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List
+from pathlib import Path
 from models import db, StreamStatus, Upload, Playlist
 import signal
 
+# Get project root directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 class StreamingManager:
     def __init__(self):
-        self.icecast_config = "/Users/basil_jackson/Documents/ai_radio/config/icecast.xml"
-        self.liquidsoap_config = "/Users/basil_jackson/Documents/ai_radio/config/liquidsoap.liq"
-        self.playlist_dir = "/Users/basil_jackson/Documents/ai_radio/media/playlists"
-        self.video_stream_dir = "/Users/basil_jackson/Documents/ai_radio/media/video_stream"
+        self.icecast_config = os.environ.get(
+            'ICECAST_CONFIG',
+            str(BASE_DIR / 'config' / 'icecast.xml')
+        )
+        self.liquidsoap_config = os.environ.get(
+            'LIQUIDSOAP_CONFIG',
+            str(BASE_DIR / 'config' / 'liquidsoap.liq')
+        )
+        self.playlist_dir = os.environ.get(
+            'PLAYLIST_DIR',
+            str(BASE_DIR / 'media' / 'playlists')
+        )
+        self.video_stream_dir = os.environ.get(
+            'VIDEO_STREAM_DIR',
+            str(BASE_DIR / 'media' / 'video_stream')
+        )
         os.makedirs(self.video_stream_dir, exist_ok=True)
         
         # Process tracking

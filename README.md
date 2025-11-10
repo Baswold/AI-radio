@@ -4,6 +4,16 @@
 
 An innovative AI-powered radio platform that combines Flask backend architecture, automated content generation, and live streaming capabilities. Built to create a completely autonomous media experience powered by open-source AI models and Raspberry Pi infrastructure.
 
+## ⚡ Recent Improvements
+
+**Production-Ready Optimizations:**
+- ✅ **Portable Configuration** - No more hardcoded paths, works anywhere
+- ✅ **Enhanced Security** - Admin role checks, rate limiting, stronger password validation
+- ✅ **Performance Boost** - Database query optimization, in-memory caching
+- ✅ **Low-End Hardware** - Optimized FFmpeg settings for Raspberry Pi
+- ✅ **Better UI** - Hardware-accelerated CSS, smoother animations
+- ✅ **Code Cleanup** - Removed redundant files, cleaner imports
+
 ## 🚀 Features
 
 - **🎵 Automated Radio Streaming** - Live broadcasts via Icecast & Liquidsoap
@@ -56,9 +66,8 @@ cd ai_radio
 pip install -r requirements.txt
 
 # Set up environment variables
-export SECRET_KEY="your-secret-key"
-export DATABASE_URL="sqlite:///ai_radio.db"
-export REDIS_URL="redis://localhost:6379/0"
+cp .env.example .env
+# Edit .env with your configuration
 
 # Initialize database
 python -c "from backend.app import create_app; from backend.models import db; app = create_app(); app.app_context().push(); db.create_all()"

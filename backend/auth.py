@@ -1,9 +1,27 @@
 from flask import Blueprint, request, jsonify, session
 from flask_login import login_user, logout_user, login_required, current_user
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from functools import wraps
 from models import db, User
 import re
 
 auth_bp = Blueprint('auth', __name__)
+
+# Rate limiter for auth routes
+limiter = Limiter(key_func=get_remote_address)
+
+
+def admin_required(f):
+    """Decorator to require admin role for a route."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return jsonify({'error': 'Authentication required'}), 401
+        if not current_user.is_admin:
+            return jsonify({'error': 'Admin privileges required'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
 
 def is_valid_email(email):
     pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
@@ -14,7 +32,22 @@ def is_valid_username(username):
     pattern = r'^[a-zA-Z0-9_-]{3,20}$'
     return re.match(pattern, username) is not None
 
+def is_strong_password(password):
+    """Check if password meets strength requirements"""
+    if len(password) < 8:
+        return False, 'Password must be at least 8 characters'
+    if len(password) > 128:
+        return False, 'Password must be less than 128 characters'
+    if not re.search(r'[a-z]', password):
+        return False, 'Password must contain lowercase letters'
+    if not re.search(r'[A-Z]', password):
+        return False, 'Password must contain uppercase letters'
+    if not re.search(r'\d', password):
+        return False, 'Password must contain numbers'
+    return True, 'Password is strong'
+
 @auth_bp.route('/register', methods=['POST'])
+@limiter.limit("5 per hour")
 def register():
     try:
         data = request.get_json()
@@ -35,9 +68,11 @@ def register():
             
         if not is_valid_username(username):
             return jsonify({'error': 'Username must be 3-20 characters, alphanumeric with underscore/hyphen only'}), 400
-            
-        if len(password) < 8:
-            return jsonify({'error': 'Password must be at least 8 characters'}), 400
+
+        # Validate password strength
+        is_strong, message = is_strong_password(password)
+        if not is_strong:
+            return jsonify({'error': message}), 400
         
         # Check if user already exists
         if User.query.filter_by(email=email).first():
@@ -70,6 +105,7 @@ def register():
         return jsonify({'error': 'Registration failed'}), 500
 
 @auth_bp.route('/login', methods=['POST'])
+@limiter.limit("10 per minute")
 def login():
     try:
         data = request.get_json()

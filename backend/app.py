@@ -1,6 +1,7 @@
 """Flask application factory for the AI Radio backend."""
 
 import os
+from pathlib import Path
 
 from flask import Flask, jsonify
 from flask_cors import CORS
@@ -13,6 +14,9 @@ from auth import auth_bp
 from upload_handler import upload_bp
 from api import api_bp
 
+# Get project root directory
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 def create_app():
     """Create and configure the Flask application."""
@@ -20,16 +24,19 @@ def create_app():
 
     # Core configuration
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-key-change-in-production')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///ai_radio.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+        'DATABASE_URL',
+        f'sqlite:///{BASE_DIR}/ai_radio.db'
+    )
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['MAX_CONTENT_LENGTH'] = 500 * 1024 * 1024  # 500MB max file size
     app.config['UPLOAD_FOLDER'] = os.environ.get(
         'UPLOAD_FOLDER',
-        '/Users/basil_jackson/Documents/ai_radio/media/uploads'
+        str(BASE_DIR / 'media' / 'uploads')
     )
     app.config['MEDIA_FOLDER'] = os.environ.get(
         'MEDIA_FOLDER',
-        '/Users/basil_jackson/Documents/ai_radio/media'
+        str(BASE_DIR / 'media')
     )
 
     # Initialize rate limiter
@@ -72,4 +79,5 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    app.run(host='0.0.0.0', port=5000, debug=debug_mode)
