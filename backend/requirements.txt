@@ -1,0 +1,75 @@
+# AI Radio Backend Requirements
+# Core Flask and extensions
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-CORS==4.0.0
+Flask-Limiter==3.5.0
+
+# Database
+SQLAlchemy==2.0.23
+alembic==1.13.1  # For database migrations
+
+# Security and password hashing
+bcrypt==4.1.2
+python-dotenv==1.0.0
+
+# File upload and validation
+Werkzeug==3.0.1
+python-magic==0.4.27  # For MIME type detection
+# On Debian/Ubuntu: sudo apt-get install libmagic1
+# On macOS: brew install libmagic
+
+# Malware scanning (optional)
+# pyclamd==0.4.0
+# Requires ClamAV to be installed and running
+
+# Celery for async task processing
+celery==5.3.4
+redis==5.0.1
+
+# Media processing
+# FFmpeg and FFprobe (must be installed separately)
+# On Debian/Ubuntu: sudo apt-get install ffmpeg
+# On macOS: brew install ffmpeg
+
+# HTTP requests
+requests==2.31.0
+urllib3==2.1.0
+
+# Testing
+pytest==7.4.3
+pytest-flask==1.3.0
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+
+# Code quality
+flake8==6.1.0
+black==23.12.1
+isort==5.13.2
+
+# API documentation
+flask-swagger-ui==4.11.1
+apispec==6.3.1
+marshmallow==3.20.1
+
+# Monitoring and logging
+python-json-logger==2.0.7
+
+# Development tools
+ipython==8.19.0
+watchdog==3.0.0
+
+# Production server
+gunicorn==21.2.0  # For production deployment
+gevent==23.9.1  # For async workers
+
+# Database drivers (choose based on your database)
+# PostgreSQL:
+# psycopg2-binary==2.9.9
+
+# MySQL:
+# PyMySQL==1.1.0
+
+# Environment-specific
+python-decouple==3.8  # Alternative to python-dotenv

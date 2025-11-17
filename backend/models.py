@@ -6,12 +6,16 @@ import bcrypt
 db = SQLAlchemy()
 
 class User(UserMixin, db.Model):
+    __tablename__ = 'user'
+
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
-    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(128))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_admin = db.Column(db.Boolean, default=False, index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     is_active = db.Column(db.Boolean, default=True)
+    last_login = db.Column(db.DateTime)
     uploads = db.relationship('Upload', backref='user', lazy=True)
     
     def set_password(self, password):
@@ -21,19 +25,22 @@ class User(UserMixin, db.Model):
         return bcrypt.checkpw(password.encode('utf-8'), self.password_hash.encode('utf-8'))
 
 class Upload(db.Model):
+    __tablename__ = 'upload'
+
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
+    title = db.Column(db.String(200), nullable=False, index=True)
     description = db.Column(db.Text)
-    media_type = db.Column(db.String(20), nullable=False)  # 'audio' or 'video'
-    category = db.Column(db.String(50))
+    media_type = db.Column(db.String(20), nullable=False, index=True)  # 'audio' or 'video'
+    category = db.Column(db.String(50), index=True)
     filename = db.Column(db.String(255))
-    file_hash = db.Column(db.String(64))  # For duplicate detection
+    file_hash = db.Column(db.String(64), unique=True, index=True)  # For duplicate detection
+    file_size = db.Column(db.BigInteger)  # File size in bytes
     duration = db.Column(db.Integer)  # In seconds
-    status = db.Column(db.String(20), default='pending')  # pending, approved, rejected
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
-    played_count = db.Column(db.Integer, default=0)
-    last_played = db.Column(db.DateTime)
+    status = db.Column(db.String(20), default='pending', index=True)  # pending, approved, rejected
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    played_count = db.Column(db.Integer, default=0, index=True)
+    last_played = db.Column(db.DateTime, index=True)
     tags = db.Column(db.JSON)
     thumbnail_path = db.Column(db.String(255))
     segments = db.relationship('Segment', backref='upload', lazy=True, cascade='all, delete-orphan')

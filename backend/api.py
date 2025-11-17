@@ -1,9 +1,12 @@
-from flask import Blueprint, request, jsonify, send_file
+from flask import Blueprint, request, jsonify, send_file, current_app
 from flask_login import login_required, current_user
+from sqlalchemy.orm import joinedload
 from models import db, Upload, Playlist, StreamStatus, User
 from scheduler import get_playlist_manager
 from streaming_manager import get_streaming_manager
+from middleware import admin_required, validate_file_path
 import os
+from pathlib import Path
 
 api_bp = Blueprint('api', __name__)
 
@@ -81,12 +84,13 @@ def get_featured_content():
     """Get featured/popular content for homepage"""
     try:
         limit = min(request.args.get('limit', 12, type=int), 50)
-        
-        # Get most played content from last week
+
+        # Get most played content - Fix N+1 query by eager loading user
         featured = Upload.query.filter_by(status='approved')\
+                         .options(joinedload(Upload.user))\
                          .order_by(Upload.played_count.desc())\
                          .limit(limit).all()
-        
+
         return jsonify({
             'featured': [
                 serialize_upload(upload, [
@@ -96,8 +100,9 @@ def get_featured_content():
                 for upload in featured
             ]
         }), 200
-        
+
     except Exception as e:
+        current_app.logger.error(f'Failed to get featured content: {e}')
         return jsonify({'error': 'Failed to get featured content'}), 500
 
 @api_bp.route('/explore', methods=['GET'])
@@ -272,15 +277,26 @@ def serve_video_stream():
 def serve_video_segment(filename):
     """Serve HLS video segments"""
     try:
-        hls_dir = "/Users/basil_jackson/Documents/ai_radio/media/video_stream/hls"
-        segment_file = os.path.join(hls_dir, filename)
-        
-        if not os.path.exists(segment_file) or not filename.endswith('.ts'):
+        # Sanitize filename to prevent path traversal
+        safe_filename = os.path.basename(filename)
+        if not safe_filename.endswith('.ts'):
+            return jsonify({'error': 'Invalid segment file'}), 400
+
+        hls_dir = Path(current_app.config.get('VIDEO_STREAM_DIR', current_app.config['MEDIA_FOLDER'])) / 'hls'
+        segment_file = hls_dir / safe_filename
+
+        # Validate path is within allowed directory
+        if not validate_file_path(segment_file, [hls_dir]):
+            current_app.logger.warning(f'Path traversal attempt: {filename}')
+            return jsonify({'error': 'Invalid path'}), 403
+
+        if not segment_file.exists():
             return jsonify({'error': 'Segment not found'}), 404
-        
-        return send_file(segment_file, mimetype='video/MP2T')
-        
+
+        return send_file(str(segment_file), mimetype='video/MP2T')
+
     except Exception as e:
+        current_app.logger.error(f'Failed to serve video segment: {e}')
         return jsonify({'error': 'Failed to serve video segment'}), 500
 
 # Streaming control endpoints
@@ -416,10 +432,10 @@ def get_stats_overview():
 
 @api_bp.route('/admin/pending', methods=['GET'])
 @login_required
+@admin_required
 def get_pending_uploads():
     """Get uploads pending approval (admin only)"""
     try:
-        # TODO: Add admin role check
         page = request.args.get('page', 1, type=int)
         per_page = min(request.args.get('per_page', 20, type=int), 100)
         
@@ -446,10 +462,10 @@ def get_pending_uploads():
 
 @api_bp.route('/admin/approve/<int:upload_id>', methods=['POST'])
 @login_required
+@admin_required
 def approve_upload(upload_id):
     """Approve an upload (admin only)"""
     try:
-        # TODO: Add admin role check
         upload = Upload.query.get_or_404(upload_id)
         
         if upload.status != 'pending':
@@ -468,10 +484,10 @@ def approve_upload(upload_id):
 
 @api_bp.route('/admin/streaming/start', methods=['POST'])
 @login_required
+@admin_required
 def start_streaming():
     """Start streaming services (admin only)"""
     try:
-        # TODO: Add admin role check
         streaming_manager = get_streaming_manager()
         service = request.json.get('service', 'all')  # 'audio', 'video', or 'all'
         
@@ -493,10 +509,10 @@ def start_streaming():
 
 @api_bp.route('/admin/streaming/stop', methods=['POST'])
 @login_required
+@admin_required
 def stop_streaming():
     """Stop streaming services (admin only)"""
     try:
-        # TODO: Add admin role check
         streaming_manager = get_streaming_manager()
         service = request.json.get('service', 'all')  # 'audio', 'video', or 'all'
         
@@ -518,10 +534,10 @@ def stop_streaming():
 
 @api_bp.route('/admin/streaming/restart', methods=['POST'])
 @login_required
+@admin_required
 def restart_streaming():
     """Restart streaming services (admin only)"""
     try:
-        # TODO: Add admin role check
         streaming_manager = get_streaming_manager()
         results = streaming_manager.restart_streaming()
         
@@ -535,10 +551,10 @@ def restart_streaming():
 
 @api_bp.route('/admin/streaming/skip-track', methods=['POST'])
 @login_required
+@admin_required
 def skip_track():
     """Skip currently playing track (admin only)"""
     try:
-        # TODO: Add admin role check
         streaming_manager = get_streaming_manager()
         result = streaming_manager.skip_current_track()
         
